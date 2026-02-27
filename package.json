@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "ingest": "npx tsx scripts/ingest-markets.ts"
+    "ingest-kalshi": "npx tsx scripts/ingest-markets.ts",
+    "sync": "npx tsx scripts/ingest-jupiter.ts && cd server && source venv/bin/activate && python3 generate_embeddings.py"
   }
 }
