@@ -1,23 +1,22 @@
 export interface MarketMatch {
-  ticker: string;
+  marketId: string;
+  eventId: string;
   title: string;
-  yesSubTitle?: string;
   eventTitle?: string;
   eventSubtitle?: string;
-  yesAsk: number | null;
-  yesBid: number | null;
-  noAsk?: number | null;
-  noBid?: number | null;
-  yesMint?: string | null;
-  noMint?: string | null;
+  category?: string;
+  imageUrl?: string;
+  buyYesPriceUsd: number | null;
+  sellYesPriceUsd?: number | null;
+  buyNoPriceUsd?: number | null;
+  sellNoPriceUsd?: number | null;
   volume?: number | null;
-  openInterest?: number | null;
-  closeTime?: string | null;
+  closeTime?: number | null;
 }
 
 export interface TweetMatch {
   id: string;
-  eventTicker: string;
+  eventId: string;
   confidence: number;
   markets: MarketMatch[];
 }
