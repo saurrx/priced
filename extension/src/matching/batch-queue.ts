@@ -84,7 +84,7 @@ export class BatchQueue {
 
     for (const match of results.matches) {
       console.log(
-        `[Predict] Backend match: tweet="${match.id}" → event=${match.eventTicker} confidence=${match.confidence} market=${match.markets[0]?.title}`
+        `[Predict] Backend match: tweet="${match.id}" → event=${match.eventId} confidence=${match.confidence} market=${match.markets[0]?.marketId}`
       );
       const tweet = batch.find((t) => t.id === match.id);
       if (tweet && match.markets.length > 0) {

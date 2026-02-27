@@ -1,6 +1,7 @@
-"""DFlow Tweet Matcher — FastAPI backend.
+"""Jupiter Tweet Matcher — FastAPI backend.
 
 POST /match  — Match tweets to prediction market events
+GET  /market/{marketId} — Get market details by Jupiter marketId
 GET  /health — Health check
 """
 
@@ -11,7 +12,7 @@ from pydantic import BaseModel
 from embedder import Embedder
 from matcher import Matcher
 
-app = FastAPI(title="DFlow Tweet Matcher")
+app = FastAPI(title="Jupiter Tweet Matcher")
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,25 +36,24 @@ class MatchRequest(BaseModel):
 
 
 class MarketMatch(BaseModel):
-    ticker: str
+    marketId: str
+    eventId: str
     title: str
-    yesSubTitle: str = ""
     eventTitle: str = ""
     eventSubtitle: str = ""
-    yesAsk: float | None
-    yesBid: float | None
-    noAsk: float | None = None
-    noBid: float | None = None
-    yesMint: str | None = None
-    noMint: str | None = None
+    category: str = ""
+    imageUrl: str = ""
+    buyYesPriceUsd: int | None = None
+    sellYesPriceUsd: int | None = None
+    buyNoPriceUsd: int | None = None
+    sellNoPriceUsd: int | None = None
     volume: int | None = None
-    openInterest: int | None = None
-    closeTime: str | None = None
+    closeTime: int | None = None
 
 
 class TweetMatch(BaseModel):
     id: str
-    eventTicker: str
+    eventId: str
     confidence: float
     markets: list[MarketMatch]
 
@@ -80,7 +80,7 @@ async def match_tweets(req: MatchRequest):
             matches.append(
                 TweetMatch(
                     id=tweet_id,
-                    eventTicker=result["eventTicker"],
+                    eventId=result["eventId"],
                     confidence=result["confidence"],
                     markets=[MarketMatch(**m) for m in result["markets"]],
                 )
@@ -90,9 +90,9 @@ async def match_tweets(req: MatchRequest):
     return MatchResponse(matches=matches, latencyMs=latency)
 
 
-@app.get("/market/{mint}")
-async def get_market_by_mint(mint: str):
-    result = matcher.get_market_by_mint(mint)
+@app.get("/market/{market_id}")
+async def get_market_by_id(market_id: str):
+    result = matcher.get_market_by_id(market_id)
     if not result:
         return {"error": "Market not found"}
     return result
@@ -102,6 +102,7 @@ async def get_market_by_mint(mint: str):
 async def health():
     return {
         "status": "ok",
+        "source": "jupiter",
         "model": "bge-base-en-v1.5",
         "events": matcher.num_events,
     }

@@ -27,48 +27,34 @@ export function renderMarketBar(tweetElement: HTMLElement, match: TweetMatch) {
   }
 
   const market = match.markets[0];
-  const yesPrice = market.yesAsk ?? market.yesBid ?? null;
-  const noPrice = market.noBid ?? (market.noAsk != null ? market.noAsk : (yesPrice !== null ? 100 - yesPrice : null));
+
+  // Jupiter prices in micro-USD: 650000 = $0.65 = 65¢
+  const yesPrice = market.buyYesPriceUsd;
+  const noPrice = market.buyNoPriceUsd;
+  const yesCents = yesPrice != null ? Math.round(yesPrice / 10000) : null;
+  const noCents = noPrice != null ? Math.round(noPrice / 10000) : null;
   const confidencePct = Math.round(match.confidence * 100);
 
-  // Smart title: use market title (the question), not yesSubTitle (outcome label)
-  const displayTitle = market.title;
-
-  // Expanded header: use eventTitle if it adds context beyond the market title
-  const expandedTitle = market.eventTitle && market.eventTitle !== market.title
-    ? market.eventTitle
-    : market.title;
+  // Use eventTitle for the main display, fallback to market title
+  const displayTitle = market.eventTitle || market.title;
+  const expandedTitle = displayTitle;
   const expandedSubtitle = market.eventSubtitle || "";
-
-  // Show yesSubTitle as context in expanded view IF it adds info
-  // Skip if it's just a date or repeats the title
-  const showSubTitle = market.yesSubTitle
-    && market.yesSubTitle !== market.title
-    && !market.yesSubTitle.startsWith("Before ");
-
-  // Spread: only show if both bid and ask exist
-  const spread = (market.yesAsk != null && market.yesBid != null)
-    ? market.yesAsk - market.yesBid
-    : null;
 
   // Close time formatting
   const closeDisplay = market.closeTime ? formatCloseTime(market.closeTime) : null;
 
-  // Volume
+  // Volume (Jupiter volume is raw number, not micro-USD)
   const volume = market.volume ? formatVolume(market.volume) : null;
 
   // Footer meta items
   const metaParts: string[] = [];
   if (volume) metaParts.push(`Vol: ${volume}`);
-  if (spread !== null) metaParts.push(`Spread: ${spread}\u00A2`);
   if (closeDisplay) metaParts.push(closeDisplay);
 
-  const yesBlinkUrl = market.yesMint
-    ? `https://dial.to/?action=solana-action:${encodeURIComponent(`${ACTIONS_SERVER_URL}/api/actions/trade/${market.yesMint}`)}`
-    : "#";
-  const noBlinkUrl = market.noMint
-    ? `https://dial.to/?action=solana-action:${encodeURIComponent(`${ACTIONS_SERVER_URL}/api/actions/trade/${market.noMint}`)}`
-    : "#";
+  // Jupiter uses marketId — one blink URL with side query param
+  const blinkBaseUrl = `${ACTIONS_SERVER_URL}/api/actions/trade/${market.marketId}`;
+  const yesBlinkUrl = `https://dial.to/?action=solana-action:${encodeURIComponent(blinkBaseUrl + "?amount=2000000&side=yes")}`;
+  const noBlinkUrl = `https://dial.to/?action=solana-action:${encodeURIComponent(blinkBaseUrl + "?amount=2000000&side=no")}`;
 
   const bar = document.createElement("div");
   bar.className = "predict-market-bar";
@@ -80,39 +66,44 @@ export function renderMarketBar(tweetElement: HTMLElement, match: TweetMatch) {
       <span class="predict-dot">\u25CF</span>
       <span class="predict-market-title">${escapeHtml(displayTitle)}</span>
       <span class="predict-prices">
-        ${yesPrice !== null ? `<span class="predict-yes">YES ${yesPrice}\u00A2</span>` : ""}
-        ${noPrice !== null ? `<span class="predict-no">NO ${noPrice}\u00A2</span>` : ""}
+        ${yesCents !== null ? `<span class="predict-yes">YES ${yesCents}\u00A2</span>` : ""}
+        ${noCents !== null ? `<span class="predict-no">NO ${noCents}\u00A2</span>` : ""}
       </span>
       <span class="predict-expand-arrow">\u25B2</span>
     </div>
     <div class="predict-bar-expanded">
       <div class="predict-expanded-header">
         <div class="predict-expanded-title-group">
-          <span class="predict-expanded-title">${escapeHtml(expandedTitle)}</span>
+          ${expandedTitle !== displayTitle ? `<span class="predict-expanded-title">${escapeHtml(expandedTitle)}</span>` : ""}
           ${expandedSubtitle ? `<span class="predict-expanded-subtitle">${escapeHtml(expandedSubtitle)}</span>` : ""}
-          ${showSubTitle ? `<span class="predict-expanded-subtitle">${escapeHtml(market.yesSubTitle!)}</span>` : ""}
         </div>
-        <span class="predict-confidence-badge">${confidencePct}% match</span>
       </div>
       <div class="predict-trade-buttons">
         <a class="predict-buy-yes"
            href="${yesBlinkUrl}"
            target="_blank"
            rel="noopener noreferrer"
-           data-mint="${escapeHtml(market.yesMint ?? "")}">
-          Buy YES <span>${yesPrice !== null ? `${yesPrice}\u00A2` : ""}</span>
+           data-market-id="${escapeHtml(market.marketId)}">
+          Buy YES <span>${yesCents !== null ? `${yesCents}\u00A2` : ""}</span>
         </a>
         <a class="predict-buy-no"
            href="${noBlinkUrl}"
            target="_blank"
            rel="noopener noreferrer"
-           data-mint="${escapeHtml(market.noMint ?? "")}">
-          Buy NO <span>${noPrice !== null ? `${noPrice}\u00A2` : ""}</span>
+           data-market-id="${escapeHtml(market.marketId)}">
+          Buy NO <span>${noCents !== null ? `${noCents}\u00A2` : ""}</span>
         </a>
       </div>
       <div class="predict-footer">
         ${metaParts.length > 0 ? `<span class="predict-meta">${metaParts.join(" \u00B7 ")}</span>` : ""}
-        <span class="predict-powered">Powered by Kalshi \u00D7 DFlow on Solana</span>
+        <a href="https://x.com/seerumai" target="_blank" rel="noopener noreferrer" class="predict-powered-header">
+          <svg class="seerum-icon" viewBox="0 0 100 100" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#FFFF00" d="M96 50 C80 75 55 90 30 90 L20 100 L25 85 C15 75 5 60 5 50 C5 40 15 25 25 15 L20 0 L30 10 C55 10 80 25 96 50 Z" />
+            <circle cx="45" cy="50" r="20" fill="#000" />
+            <circle cx="50" cy="45" r="5" fill="#FFF" />
+          </svg>
+          Powered by @seerumAI
+        </a>
       </div>
     </div>
   `;
@@ -143,14 +134,11 @@ export function renderMarketBar(tweetElement: HTMLElement, match: TweetMatch) {
 }
 
 function insertBar(tweetElement: HTMLElement, bar: HTMLElement) {
-  // Try to insert after tweet text content
   const tweetText = tweetElement.querySelector('[data-testid="tweetText"]');
   if (tweetText?.parentElement) {
     tweetText.parentElement.insertAdjacentElement("afterend", bar);
     return;
   }
-
-  // Fallback: append to the article
   tweetElement.appendChild(bar);
 }
 
@@ -166,8 +154,8 @@ function formatVolume(vol: number): string {
   return `$${vol}`;
 }
 
-function formatCloseTime(closeTime: string): string {
-  const close = new Date(closeTime);
+function formatCloseTime(closeTime: number): string {
+  const close = new Date(closeTime * 1000); // Jupiter uses Unix seconds
   const now = new Date();
   const diffMs = close.getTime() - now.getTime();
 
