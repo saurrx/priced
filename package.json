@@ -1,0 +1,9 @@
+{
+  "name": "dflow-lisbon",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ingest": "npx tsx scripts/ingest-markets.ts"
+  }
+}
