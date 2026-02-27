@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.next/
+.context/
+server/.venv/
+server/data/model.onnx
+server/data/event-embeddings.npy
+__pycache__/
+*.pyc
+.env
+.env.local

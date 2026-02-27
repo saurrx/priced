@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "tests": [
+    { "text": "Scottie Scheffler just birdied 18", "expectEventPattern": "PGA|GENESIS|SCHEFFLER", "category": "sports-entity" },
+    { "text": "Lakers going back to back this year", "expectEventPattern": "NBA", "category": "sports-entity" },
+    { "text": "Rory McIlroy looking sharp today", "expectEventPattern": "PGA|GENESIS|MCILROY", "category": "sports-entity" },
+    { "text": "Chiefs winning the Super Bowl again", "expectEventPattern": "NFL|SUPER", "category": "sports-entity" },
+    { "text": "March Madness bracket is insane", "expectEventPattern": "MARMAD|NCAA|MARCH", "category": "sports-event" },
+    { "text": "Celtics vs Bucks is going to be a great series", "expectEventPattern": "NBA", "category": "sports-matchup" },
+    { "text": "what a game tonight holy crap", "expectEvent": null, "category": "sports-vague" },
+    { "text": "Man City looking dominant in the Premier League", "expectEventPattern": "EPL|PREMIER|SOCCER", "category": "sports-entity" },
+    { "text": "UFC card this weekend is stacked", "expectEventPattern": "UFC", "category": "sports-event" },
+    { "text": "World Cup qualifiers getting interesting", "expectEventPattern": "WORLD.*CUP|FIFA|WC", "category": "sports-event" },
+
+    { "text": "Kevin Warsh is 100% getting Fed Chair", "expectEventPattern": "FEDCHAIR", "category": "politics-entity" },
+    { "text": "Trump is buying Greenland for real", "expectEventPattern": "STATE51|GREENLAND|TRUMP", "category": "politics-disambiguation" },
+    { "text": "AOC running for president in 2028?", "expectEventPattern": "PRES.*28|DEM", "category": "politics-entity" },
+    { "text": "Will Trump actually resign before his term ends?", "expectEventPattern": "TRUMP.*OUT|RESIGN|TRUMP", "category": "politics-entity" },
+    { "text": "Gavin Newsom is the frontrunner for 2028", "expectEventPattern": "PRES.*28|DEM|NEWSOM", "category": "politics-entity" },
+    { "text": "Republicans need a better candidate for 2028", "expectEventPattern": "PRES.*28|REP|NOMR", "category": "politics-semantic" },
+    { "text": "State of the Union was boring", "expectEventPattern": "SOTU|TRUMP|STATE", "category": "politics-event" },
+    { "text": "politics is so exhausting these days", "expectEvent": null, "category": "politics-vague" },
+
+    { "text": "BTC pumping past 95k, 100k next?", "expectEventPattern": "BTC|BITCOIN", "category": "crypto-entity" },
+    { "text": "$ETH looking weak below 3k", "expectEventPattern": "ETH", "category": "crypto-entity" },
+    { "text": "Bitcoin to 150k this year, calling it now", "expectEventPattern": "BTC.*150|BITCOIN", "category": "crypto-price" },
+    { "text": "SOL holding strong above $200", "expectEventPattern": "SOL", "category": "crypto-entity" },
+    { "text": "crypto market looking bullish af", "expectEventPattern": "BTC|CRYPTO|SOL|ETH", "category": "crypto-semantic" },
+    { "text": "just bought more $BTC on the dip", "expectEventPattern": "BTC|BITCOIN", "category": "crypto-entity" },
+
+    { "text": "who do you think takes best picture at the Oscars?", "expectEventPattern": "OSCAR", "category": "entertainment-semantic" },
+    { "text": "Survivor season is getting good", "expectEventPattern": "SURVIVOR", "category": "entertainment-entity" },
+    { "text": "Best Actor race is wide open this year", "expectEventPattern": "OSCARACT", "category": "entertainment-semantic" },
+    { "text": "GTA 6 is going to be $80 for sure", "expectEventPattern": "GTA", "category": "entertainment-entity" },
+    { "text": "Beast Games Season 2 is going to be crazy", "expectEventPattern": "BEAST", "category": "entertainment-entity" },
+
+    { "text": "CPI numbers are going to be wild tomorrow", "expectEventPattern": "CPI", "category": "economics-semantic" },
+    { "text": "no rate cut this time, the Fed is holding", "expectEventPattern": "FED|RATE|DECISION", "category": "economics-semantic" },
+    { "text": "recession incoming, mark my words", "expectEventPattern": "RECSSN|RECESSION", "category": "economics-semantic" },
+    { "text": "GDP growth is slowing down", "expectEventPattern": "GDP|DEBT|RECSSN|ECON", "category": "economics-semantic" },
+
+    { "text": "SpaceX Starship launching next week", "expectEventPattern": "IPO|SPACEX", "category": "scitech-entity" },
+    { "text": "OpenAI about to drop GPT-5", "expectEventPattern": "IPO|OPENAI", "category": "scitech-entity" },
+    { "text": "when is SpaceX going to IPO already", "expectEventPattern": "IPO", "category": "scitech-entity" },
+
+    { "text": "just had amazing pasta for dinner", "expectEvent": null, "category": "noise" },
+    { "text": "my dog is the cutest thing ever", "expectEvent": null, "category": "noise" },
+    { "text": "feeling grateful today", "expectEvent": null, "category": "noise" },
+    { "text": "gm", "expectEvent": null, "category": "noise-short" },
+    { "text": "lol", "expectEvent": null, "category": "noise-short" },
+    { "text": "rt if you agree", "expectEvent": null, "category": "noise-meta" },
+    { "text": "can't believe it's already February", "expectEvent": null, "category": "noise" },
+    { "text": "good morning everyone hope you have a great day", "expectEvent": null, "category": "noise" },
+    { "text": "this is so funny I can't even", "expectEvent": null, "category": "noise" },
+    { "text": "just finished a great book, highly recommend", "expectEvent": null, "category": "noise" },
+    { "text": "happy birthday to the best person ever", "expectEvent": null, "category": "noise" },
+    { "text": "ugh mondays amirite", "expectEvent": null, "category": "noise" }
+  ]
+}

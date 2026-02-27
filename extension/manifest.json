@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Predict Markets",
+  "version": "0.1.0",
+  "description": "Trade prediction markets directly from Twitter",
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*", "https://twitter.com/*"],
+      "js": ["dist/content.js"],
+      "css": ["styles/market-bar.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://*.up.railway.app/*",
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*",
+    "https://*.vercel.app/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
