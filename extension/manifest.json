@@ -1,17 +1,26 @@
 {
   "manifest_version": 3,
-  "name": "Predict Markets",
+  "name": "Priced by Seerum",
   "version": "0.1.0",
-  "description": "Trade prediction markets directly from Twitter",
+  "description": "Trade prediction markets directly from Twitter with SeerumAI",
   "content_scripts": [
     {
-      "matches": ["https://x.com/*", "https://twitter.com/*"],
-      "js": ["dist/content.js"],
-      "css": ["styles/market-bar.css"],
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*"
+      ],
+      "js": [
+        "dist/content.js"
+      ],
+      "css": [
+        "styles/market-bar.css"
+      ],
       "run_at": "document_idle"
     }
   ],
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://*.up.railway.app/*",
     "http://127.0.0.1:8000/*",
