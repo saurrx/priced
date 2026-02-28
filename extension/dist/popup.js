@@ -1,0 +1,21 @@
+"use strict";(()=>{var i="https://api.seerum.ai",U=`${i}/match`,Y=`${i}/prices`;var r="seerum_access",M=24*60*60*1e3,f="seerum_match_stats",m="seerum_paused";document.addEventListener("DOMContentLoaded",async()=>{let e=document.getElementById("access-section"),s=document.getElementById("connected-section"),o=document.getElementById("access-code-input"),h=document.getElementById("submit-btn"),T=document.getElementById("btn-text"),v=document.getElementById("btn-spinner"),A=document.getElementById("error-msg"),k=document.getElementById("disconnect-btn"),p=document.getElementById("pause-toggle"),_=document.getElementById("status-dot"),d=document.getElementById("status-label"),c=await O();c&&Date.now()-c.validatedAt<M?E():c?(await P(c.code)).valid?(await N(c.code),E()):(await B(),y()):y(),h.addEventListener("click",b),o.addEventListener("keydown",t=>{t.key==="Enter"&&b()}),k.addEventListener("click",async()=>{await B(),y()}),p.addEventListener("change",()=>{let t=!p.checked;chrome.storage.local.set({[m]:t}),C(t)});async function b(){let t=o.value.trim();if(!t){u("Please enter an invite code");return}T.textContent="Verifying...",v.style.display="inline-block",h.disabled=!0,x();try{let n=await P(t);n.valid?(await N(t),E()):n.reason==="exhausted"?u("Verification failed \u2014 code has been fully used"):u("Verification failed \u2014 code is invalid")}catch{u("Could not verify. Check your connection.")}finally{T.textContent="Activate",v.style.display="none",h.disabled=!1}}function y(){e.style.display="flex",s.style.display="none",o.value="",x()}async function E(){e.style.display="none",s.style.display="flex";let n=(await S(m))[m]===!0;p.checked=!n,C(n);let g=(await S(f))[f]||null;D(g),R()}function C(t){t?(_.className="dash-status-dot dash-status-dot--paused",d.className="dash-status-label dash-status-label--paused",d.textContent="Paused"):(_.className="dash-status-dot dash-status-dot--active",d.className="dash-status-label dash-status-label--active",d.textContent="Active")}function D(t){let n=document.getElementById("stat-matched-today"),l=document.getElementById("last-match-container"),g=new Date().toISOString().slice(0,10),H=t?.matchedDate===g?t.matchedToday:0;if(n.textContent=String(H),t?.lastMatch){let a=t.lastMatch,w=a.buyYesPriceUsd?Math.round(a.buyYesPriceUsd/1e4):null,I=a.buyNoPriceUsd?Math.round(a.buyNoPriceUsd/1e4):null;l.innerHTML=`
+        <div class="last-match-card">
+          <div class="last-match-tweet">${L(a.tweetText)}</div>
+          <div class="last-match-market">
+            <span class="last-match-brand">PRICED</span>
+            <span class="last-match-title">${L(a.marketTitle)}</span>
+            <div class="last-match-prices">
+              ${w!==null?`<span class="last-match-pill last-match-pill--yes">YES<br>${w}\xA2</span>`:""}
+              ${I!==null?`<span class="last-match-pill last-match-pill--no">NO<br>${I}\xA2</span>`:""}
+            </div>
+          </div>
+        </div>
+      `}else l.innerHTML=`
+        <div class="last-match-placeholder">
+          <p>No matches yet \u2014 only tweets relevant to active markets get matched. Browse X or try this one:</p>
+          <a class="last-match-try-link" href="https://x.com/FoxNews/status/2025536170587799938" target="_blank" rel="noopener noreferrer">
+            <span>Try this tweet \u2192 @FoxNews \u2014 see Priced in action</span>
+            <span class="last-match-try-arrow">\u2197</span>
+          </a>
+        </div>
+      `}async function R(){let t=document.getElementById("stat-live-markets");try{let n=await fetch(`${i}/health`);if(n.ok){let l=await n.json();t.textContent=String(l.events||0)}}catch{t.textContent="--"}}function u(t){A.textContent=t}function x(){A.textContent=""}});function L(e){let s=document.createElement("div");return s.textContent=e,s.innerHTML}async function P(e){let s=await fetch(`${i}/validate-access`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:e})});return s.ok?s.json():{valid:!1,reason:"not_found"}}function S(e){return new Promise(s=>{chrome.storage.local.get(e,s)})}async function O(){return(await S(r))[r]??null}async function N(e){let s={code:e,validatedAt:Date.now()};return new Promise(o=>{chrome.storage.local.set({[r]:s},o)})}async function B(){return new Promise(e=>{chrome.storage.local.remove(r,e)})}})();
