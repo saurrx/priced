@@ -3,6 +3,8 @@ import {
   FLUSH_DELAY_MS,
   MAX_BATCH_SIZE,
   TWEET_MAX_AGE_MS,
+  MATCH_STATS_KEY,
+  PAUSED_STORAGE_KEY,
 } from "../config";
 import type { QueuedTweet } from "../types";
 import { ApiClient } from "./api-client";
@@ -15,9 +17,22 @@ export class BatchQueue {
   private scrollTimer: ReturnType<typeof setTimeout> | null = null;
   private intersectionObserver: IntersectionObserver;
   private apiClient: ApiClient;
+  private paused = false;
 
   constructor(apiClient: ApiClient) {
     this.apiClient = apiClient;
+
+    // Load initial pause state
+    chrome.storage.local.get(PAUSED_STORAGE_KEY, (result) => {
+      this.paused = result[PAUSED_STORAGE_KEY] === true;
+    });
+
+    // React to pause toggle changes from popup
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === "local" && changes[PAUSED_STORAGE_KEY]) {
+        this.paused = changes[PAUSED_STORAGE_KEY].newValue === true;
+      }
+    });
 
     this.intersectionObserver = new IntersectionObserver(
       (entries) => {
@@ -59,6 +74,7 @@ export class BatchQueue {
   }
 
   private async flush() {
+    if (this.paused) return;
     if (this.queue.length === 0) return;
 
     const now = Date.now();
@@ -83,17 +99,36 @@ export class BatchQueue {
     );
 
     for (const match of results.matches) {
-      console.log(
-        `[Predict] Backend match: tweet="${match.id}" → event=${match.eventId} confidence=${match.confidence} market=${match.markets[0]?.marketId}`
-      );
       const tweet = batch.find((t) => t.id === match.id);
       if (tweet && match.markets.length > 0) {
         renderMarketBar(tweet.element, match, this.apiClient);
+        this.recordMatch(tweet.text, match.markets[0]);
       }
     }
 
-    console.log(
-      `[Predict] Backend: ${results.matches.length} matches from ${batch.length} tweets, latency=${results.latencyMs?.toFixed(0)}ms`
-    );
+  }
+
+  private recordMatch(tweetText: string, market: { title: string; eventTitle?: string; marketId: string; buyYesPriceUsd: number | null; buyNoPriceUsd: number | null }) {
+    const today = new Date().toISOString().slice(0, 10);
+    chrome.storage.local.get(MATCH_STATS_KEY, (result) => {
+      const stats = result[MATCH_STATS_KEY] || {};
+      const matchedDate = stats.matchedDate || "";
+      const matchedToday = matchedDate === today ? (stats.matchedToday || 0) + 1 : 1;
+
+      chrome.storage.local.set({
+        [MATCH_STATS_KEY]: {
+          matchedToday,
+          matchedDate: today,
+          lastMatch: {
+            tweetText: tweetText.slice(0, 200),
+            marketTitle: market.eventTitle || market.title,
+            marketId: market.marketId,
+            buyYesPriceUsd: market.buyYesPriceUsd,
+            buyNoPriceUsd: market.buyNoPriceUsd,
+            matchedAt: Date.now(),
+          },
+        },
+      });
+    });
   }
 }

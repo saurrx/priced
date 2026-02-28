@@ -224,8 +224,9 @@ class ValidateAccessRequest(BaseModel):
 async def validate_access(req: ValidateAccessRequest):
     code = req.code.strip()
     if not code:
-        return {"valid": False}
-    return {"valid": access_db.validate_code(code)}
+        return {"valid": False, "reason": "not_found"}
+    valid, reason = access_db.validate_code(code)
+    return {"valid": valid, "reason": reason}
 
 
 # ── Admin endpoints ──────────────────────────────────────────────

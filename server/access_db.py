@@ -24,8 +24,10 @@ def init_db():
         """)
 
 
-def validate_code(code: str) -> bool:
-    """Check code exists, is active, and under limit. Increments used_count atomically."""
+def validate_code(code: str) -> tuple[bool, str]:
+    """Check code exists, is active, and under limit. Increments used_count atomically.
+    Returns (valid, reason) where reason is 'ok', 'not_found', 'inactive', or 'exhausted'.
+    """
     with _conn() as db:
         cur = db.execute(
             """
@@ -37,7 +39,21 @@ def validate_code(code: str) -> bool:
             """,
             (code,),
         )
-        return cur.rowcount == 1
+        if cur.rowcount == 1:
+            return True, "ok"
+        # Determine why it failed
+        row = db.execute(
+            "SELECT active, max_uses, used_count FROM access_codes WHERE code = ?",
+            (code,),
+        ).fetchone()
+        if not row:
+            return False, "not_found"
+        active, max_uses, used_count = row
+        if not active:
+            return False, "inactive"
+        if max_uses > 0 and used_count >= max_uses:
+            return False, "exhausted"
+        return False, "not_found"
 
 
 def list_codes() -> list[dict]:
