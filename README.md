@@ -12,6 +12,7 @@
   <a href="https://priced.seerum.ai">Website</a> &bull;
   <a href="#features">Features</a> &bull;
   <a href="#installation">Installation</a> &bull;
+  <a href="docs/ARCHITECTURE.md">Docs</a> &bull;
   <a href="#privacy--security">Privacy & Security</a>
 </p>
 
