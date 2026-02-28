@@ -29,7 +29,6 @@ export function startObserving(batchQueue: BatchQueue) {
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
-  console.log("[Predict] Tweet observer started");
 }
 
 function processTweet(article: HTMLElement, batchQueue: BatchQueue) {
@@ -46,10 +45,6 @@ function processTweet(article: HTMLElement, batchQueue: BatchQueue) {
   const id = hashText(rawText);
   if (processedTweets.has(id)) return;
   processedTweets.add(id);
-
-  console.log(
-    `[Predict] Tweet: "${text.substring(0, 60)}..." → queued for backend`
-  );
 
   // Every tweet goes to the batch queue — no entity matching, no shortcuts
   batchQueue.addTweet(id, text, article);

@@ -282,12 +282,29 @@ function footerHtml(metaParts: string[]): string {
 }
 
 function insertBar(tweetElement: HTMLElement, bar: HTMLElement) {
-  const tweetText = tweetElement.querySelector('[data-testid="tweetText"]');
+  // X's virtual scroll can detach article elements between queue and render.
+  // If the stored reference is stale, re-find the tweet in the live DOM.
+  const target = tweetElement.isConnected ? tweetElement : refindTweet(tweetElement);
+  if (!target) return;
+
+  const tweetText = target.querySelector('[data-testid="tweetText"]');
   if (tweetText?.parentElement) {
     tweetText.parentElement.insertAdjacentElement("afterend", bar);
     return;
   }
-  tweetElement.appendChild(bar);
+  target.appendChild(bar);
+}
+
+function refindTweet(staleElement: HTMLElement): HTMLElement | null {
+  const staleText = staleElement.querySelector('[data-testid="tweetText"]')?.textContent?.trim();
+  if (!staleText) return null;
+
+  const articles = document.querySelectorAll('article[data-testid="tweet"]');
+  for (const article of articles) {
+    const text = article.querySelector('[data-testid="tweetText"]')?.textContent?.trim();
+    if (text === staleText) return article as HTMLElement;
+  }
+  return null;
 }
 
 function esc(text: string): string {

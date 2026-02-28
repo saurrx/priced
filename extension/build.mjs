@@ -3,10 +3,8 @@ import { readFileSync } from "fs";
 
 const isWatch = process.argv.includes("--watch");
 
-const config = {
-  entryPoints: ["src/content/index.ts"],
+const shared = {
   bundle: true,
-  outfile: "dist/content.js",
   target: "chrome120",
   format: "iife",
   minify: !isWatch,
@@ -14,12 +12,29 @@ const config = {
   loader: { ".json": "json" },
 };
 
+const contentConfig = {
+  ...shared,
+  entryPoints: ["src/content/index.ts"],
+  outfile: "dist/content.js",
+};
+
+const popupConfig = {
+  ...shared,
+  entryPoints: ["src/popup.ts"],
+  outfile: "dist/popup.js",
+};
+
 if (isWatch) {
-  const ctx = await context(config);
-  await ctx.watch();
+  const ctx1 = await context(contentConfig);
+  const ctx2 = await context(popupConfig);
+  await ctx1.watch();
+  await ctx2.watch();
   console.log("Watching for changes...");
 } else {
-  await build(config);
-  const size = readFileSync("dist/content.js").length;
-  console.log(`Built dist/content.js (${(size / 1024).toFixed(1)} KB)`);
+  await build(contentConfig);
+  await build(popupConfig);
+  const contentSize = readFileSync("dist/content.js").length;
+  const popupSize = readFileSync("dist/popup.js").length;
+  console.log(`Built dist/content.js (${(contentSize / 1024).toFixed(1)} KB)`);
+  console.log(`Built dist/popup.js (${(popupSize / 1024).toFixed(1)} KB)`);
 }
