@@ -46,16 +46,28 @@ class Matcher:
     def num_events(self) -> int:
         return len(self.event_ids)
 
+    def _has_viable_markets(self, event_id: str) -> bool:
+        """Check if event has at least one open, tradeable market."""
+        markets = self.event_markets.get(event_id, [])
+        now_unix = int(time.time())
+        return any(
+            m.get("buyYesPriceUsd") is not None
+            and 30000 <= m["buyYesPriceUsd"] <= 970000
+            and (m.get("closeTime") is None or m["closeTime"] > now_unix)
+            for m in markets
+        )
+
     def match(
         self,
         embedding: np.ndarray,
         candidates: list[str] | None = None,
         threshold: float = 0.75,
-        max_fallbacks: int = 5,
         tweet_text: str | None = None,
-        rerank_top_n: int = 10,
+        rerank_top_n: int = 8,
         rerank_threshold: float = 0.83,
         cosine_gate: float = 0.65,
+        cosine_scan: int = 50,
+        min_match_cosine: float = 0.72,
     ) -> dict | None:
         if candidates:
             indices = [self.id_to_idx[eid] for eid in candidates if eid in self.id_to_idx]
@@ -72,7 +84,7 @@ class Matcher:
             ranked_ids = [self.event_ids[i] for i in ranked]
             ranked_indices = [int(i) for i in ranked]
 
-        # Cross-encoder reranking: score top-N candidates with the reranker
+        # Cross-encoder reranking: score top-N VIABLE candidates
         if self.reranker and tweet_text:
             # Stage 1: cosine gate — loose filter to eliminate junk before
             # expensive reranking (short/generic tweets score <0.65 cosine)
@@ -80,17 +92,32 @@ class Matcher:
             if best_cosine < cosine_gate:
                 return None
 
-            top_n = min(rerank_top_n, len(ranked_ids))
-            top_ids = ranked_ids[:top_n]
-            top_indices = ranked_indices[:top_n]
+            # Stage 2: collect top viable candidates from cosine ranking.
+            # Scan beyond top-10 because ~30% of events have expired markets.
+            viable_ids = []
+            viable_indices = []
+            viable_cosines = []
+            scan_limit = min(cosine_scan, len(ranked_ids))
+            for i in range(scan_limit):
+                eid = ranked_ids[i]
+                if self._has_viable_markets(eid):
+                    viable_ids.append(eid)
+                    viable_indices.append(ranked_indices[i])
+                    viable_cosines.append(float(scores[ranked_indices[i]]))
+                    if len(viable_ids) >= rerank_top_n:
+                        break
 
-            documents = [self.embedding_texts[i] for i in top_indices]
+            if not viable_ids:
+                return None
+
+            # Stage 3: cross-encoder reranking on viable candidates only
+            documents = [self.embedding_texts[i] for i in viable_indices]
             rerank_scores = self.reranker.score_pairs(tweet_text, documents)
 
             reranked_order = np.argsort(rerank_scores)[::-1]
-            ranked_ids = [top_ids[i] for i in reranked_order]
+            ranked_ids = [viable_ids[i] for i in reranked_order]
             ranked_scores = [float(rerank_scores[i]) for i in reranked_order]
-            # Stage 2: reranker threshold — strict filter for quality
+            ranked_cosines = [viable_cosines[i] for i in reranked_order]
             threshold = rerank_threshold
         else:
             if candidates:
@@ -98,12 +125,16 @@ class Matcher:
             else:
                 ranked_scores = [float(scores[i]) for i in ranked]
 
-        # Try top events in order — skip events whose markets are all closed
-        for event_id, score in zip(
-            ranked_ids[:max_fallbacks], ranked_scores[:max_fallbacks]
-        ):
+        # Return best match above threshold.
+        # When reranker is active, also check that the cosine similarity
+        # for the winning event is high enough — low cosine + high reranker
+        # usually means the reranker matched on keywords, not meaning.
+        use_cosine_check = self.reranker and tweet_text
+        for i, (event_id, score) in enumerate(zip(ranked_ids, ranked_scores)):
             if score < threshold:
                 return None
+            if use_cosine_check and ranked_cosines[i] < min_match_cosine:
+                continue
 
             selection = self._select_markets(event_id)
             if selection["items"]:

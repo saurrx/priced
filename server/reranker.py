@@ -28,7 +28,7 @@ class Reranker:
         self.input_names = [inp.name for inp in self.session.get_inputs()]
 
         self.tokenizer = Tokenizer.from_pretrained(MODEL_REPO)
-        self.tokenizer.enable_padding(length=256)
+        self.tokenizer.enable_padding()  # dynamic: pad to longest in batch
         self.tokenizer.enable_truncation(max_length=256)
 
     def _download_model(self, dest: str):
