@@ -4,31 +4,41 @@ POST /match   — Match tweets to prediction market events
 POST /prices  — Fetch live prices from Jupiter for specific market IDs
 GET  /market/{marketId} — Get market details by Jupiter marketId
 GET  /health  — Health check
+GET  /admin   — Admin dashboard
 """
 
 import asyncio
 import os
 import re
+import secrets
 import time
+from pathlib import Path
 
 import httpx
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
 from embedder import Embedder
 from matcher import Matcher
 from reranker import Reranker
+import access_db
 
 JUP_API = "https://api.jup.ag/prediction/v1"
 JUP_API_KEY = os.environ.get("JUP_API_KEY", "5f6da690-eb02-4aed-858b-3c034f0b490d")
+
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
+_admin_tokens: set[str] = set()
+
+access_db.init_db()
 
 app = FastAPI(title="Jupiter Tweet Matcher")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Lock down after hackathon
-    allow_methods=["POST", "GET", "OPTIONS"],
+    allow_methods=["POST", "GET", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -188,8 +198,10 @@ async def get_live_prices(req: PricesRequest):
 
 
 @app.post("/reload")
-async def reload_data():
+async def reload_data(request: Request):
     """Hot-reload market data + embeddings without restarting the server."""
+    if not _check_admin(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
     global matcher
     try:
         new_matcher = Matcher(reranker=reranker)
@@ -202,6 +214,105 @@ async def reload_data():
         }
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+
+class ValidateAccessRequest(BaseModel):
+    code: str
+
+
+@app.post("/validate-access")
+async def validate_access(req: ValidateAccessRequest):
+    code = req.code.strip()
+    if not code:
+        return {"valid": False}
+    return {"valid": access_db.validate_code(code)}
+
+
+# ── Admin endpoints ──────────────────────────────────────────────
+
+def _check_admin(request: Request) -> bool:
+    auth = request.headers.get("authorization", "")
+    if auth.startswith("Bearer "):
+        return auth[7:] in _admin_tokens
+    return False
+
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_page():
+    html = (Path(__file__).parent / "admin.html").read_text()
+    return HTMLResponse(html)
+
+
+class AdminLoginRequest(BaseModel):
+    password: str
+
+
+@app.post("/admin/login")
+async def admin_login(req: AdminLoginRequest):
+    if req.password == ADMIN_PASSWORD:
+        token = secrets.token_hex(32)
+        _admin_tokens.add(token)
+        return {"token": token}
+    return JSONResponse({"error": "invalid"}, status_code=401)
+
+
+@app.post("/admin/logout")
+async def admin_logout(request: Request):
+    auth = request.headers.get("authorization", "")
+    if auth.startswith("Bearer "):
+        _admin_tokens.discard(auth[7:])
+    return {"ok": True}
+
+
+@app.get("/admin/api/codes")
+async def admin_list_codes(request: Request):
+    if not _check_admin(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    return access_db.list_codes()
+
+
+class CreateCodeRequest(BaseModel):
+    code: str
+    max_uses: int = 0
+
+
+@app.post("/admin/api/codes")
+async def admin_create_code(req: CreateCodeRequest, request: Request):
+    if not _check_admin(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    ok = access_db.create_code(req.code.strip(), req.max_uses)
+    if not ok:
+        return JSONResponse({"error": "code already exists"}, status_code=409)
+    return {"ok": True}
+
+
+class UpdateCodeRequest(BaseModel):
+    max_uses: int | None = None
+    active: bool | None = None
+
+
+@app.patch("/admin/api/codes/{code}")
+async def admin_update_code(code: str, req: UpdateCodeRequest, request: Request):
+    if not _check_admin(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    access_db.update_code(code, max_uses=req.max_uses, active=req.active)
+    return {"ok": True}
+
+
+@app.post("/admin/api/codes/{code}/reset")
+async def admin_reset_code(code: str, request: Request):
+    if not _check_admin(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    access_db.reset_usage(code)
+    return {"ok": True}
+
+
+@app.delete("/admin/api/codes/{code}")
+async def admin_delete_code(code: str, request: Request):
+    if not _check_admin(request):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    access_db.delete_code(code)
+    return {"ok": True}
 
 
 @app.get("/health")
