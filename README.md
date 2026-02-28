@@ -1,46 +1,108 @@
-# Priced by SeerumAI 🦅
+# Priced by SeerumAI
 
-**Priced by SeerumAI** is a seamless browser extension that brings real-time Web3 prediction markets directly into your X (formerly Twitter) timeline. 
+<p align="center">
+  <img src="extension/icons/icon128.png" alt="Priced Logo" width="128" height="128">
+</p>
 
-Powered by **SeerumAI** & **Jupiter Prediction Markets on Solana**, this extension uses an intelligent vector-matching backend to automatically detect tweets about real-world events (e.g., elections, crypto prices, sports) and natively embeds a gorgeous, interactive Solana **Blink** right below the tweet. This allows users to trade "YES" or "NO" shares directly from their feed with custom USD quantities, without ever leaving X!
+<p align="center">
+  <strong>Trade Prediction Markets Directly From Your X Timeline</strong>
+</p>
+
+<p align="center">
+  <a href="https://priced.seerum.ai">Website</a> &bull;
+  <a href="#features">Features</a> &bull;
+  <a href="#installation">Installation</a> &bull;
+  <a href="#privacy--security">Privacy & Security</a>
+</p>
+
+## Overview
+
+Priced is a Chrome extension that brings real-time prediction markets directly into your X (Twitter) feed. Powered by **Jupiter Prediction Markets on Solana**, the extension uses intelligent semantic matching to detect tweets about real-world events and embeds interactive trading cards right below the tweet. Trade YES or NO shares without ever leaving your feed.
+
+## Features
+
+### Real-Time Market Matching
+- Automatically detects tweets about elections, crypto prices, sports, and more
+- Intelligent semantic matching — not keyword-based — so it catches what matters
+- Batches and prioritizes visible tweets for fast, efficient matching
+
+### Inline Trading Cards
+- Beautiful market cards appear directly below matched tweets
+- See YES/NO probabilities, volume, and close time at a glance
+- Expand to view full market details and live price updates
+
+### Trade via Solana Blinks
+- One-click trading through Jupiter Prediction Markets
+- Buy YES or NO shares with custom USD amounts
+- Transactions execute through Solana Blinks — no redirect needed
+
+## Installation
+
+### Step 1: Download the Extension
+- Click the green **Code** button on this repo, then **Download ZIP**
+- Unzip the downloaded file
+
+### Step 2: Load into Chrome
+1. Open Google Chrome (also works on Brave and Edge)
+2. Go to `chrome://extensions/`
+3. Enable **Developer mode** (toggle in the top-right corner)
+4. Click **Load unpacked**
+5. Select the **`extension`** folder from the unzipped download
+
+### Step 3: Activate
+1. Click the **Priced** extension icon in your browser toolbar
+2. Enter your invite code
+3. Head to [x.com](https://x.com) and scroll your feed — market cards appear automatically!
+
+## Getting an Invite Code
+
+Priced is currently invite-only. To request access:
+- Join our [Telegram community](https://t.me/+7EFz5w6MPfZiZmE1)
+- Follow [@seerumAI](https://x.com/seerumAI) on X
+
+## How It Works
+
+When you scroll through X, Priced scans tweet text using a semantic AI model and matches it against 1,300+ active prediction market events on Jupiter. When a tweet matches, a compact market card slides in below the tweet showing current probabilities. Click to expand and trade directly via Solana Blinks.
+
+## Permissions Explained
+
+| Permission | Purpose |
+|------------|---------|
+| `storage` | Save your invite code and preferences locally |
+| `host_permissions` (api.seerum.ai) | Communicate with the matching backend to find relevant markets |
+
+## Privacy & Security
+
+Your security is our top priority:
+
+- **No Private Keys** — Priced never accesses or stores wallet private keys
+- **No Clipboard Access** — No access to clipboard data
+- **Minimal Permissions** — Only `storage` permission, no `tabs`, `scripting`, or `webRequest`
+- **Limited Site Access** — Content scripts only run on x.com and twitter.com
+- **No Tracking** — No analytics, telemetry, or user behavior tracking
+- **Open Source** — All code is transparent and auditable in this repo
+
+## For Developers
+
+If you want to modify the extension source code:
+
+```bash
+cd extension
+npm install
+npm run build    # production build
+npm run watch    # development with auto-rebuild
+```
+
+The extension source is in `extension/src/` (TypeScript). The build compiles to `extension/dist/`.
+
+## Community
+
+- Follow us on [X](https://x.com/seerumAI)
+- Join our [Telegram](https://t.me/+7EFz5w6MPfZiZmE1)
+- Visit [priced.seerum.ai](https://priced.seerum.ai)
 
 ---
 
-## 🚀 How to Install and Use the Extension
-
-Since this extension is currently in active development, you can run it directly on your browser by loading the local folder. Keep in mind that you must **build** the extension first so the browser can read it!
-
-Follow these exact steps to install it on Google Chrome, Brave, or Edge:
-
-### Step 1: Download & Build the Extension
-1. Clone or download this repository to your computer.
-2. Open your terminal and navigate to the `extension` folder inside the project:
-   ```bash
-   cd dflow/extension
-   ```
-3. Install the dependencies for the extension:
-   ```bash
-   npm install
-   ```
-4. Build the final extension files:
-   ```bash
-   npm run build
-   ```
-   *This command will generate a new `dist/` folder inside the `extension` directory. This `dist/` folder is what Chrome actually needs!*
-
-### Step 2: Load into Google Chrome
-1. Open Google Chrome.
-2. Type `chrome://extensions/` into your address bar and press Enter.
-3. In the top-right corner, turn on the **Developer mode** toggle.
-4. Click the **Load unpacked** button in the top-left corner.
-5. In the file picker, select the newly generated **`dist`** folder (located inside `dflow/extension/dist`).
-
-### Step 3: Use the Extension!
-1. Go to [x.com](https://x.com) and refresh the page.
-2. Scroll through your feed! Whenever a tweet mentions a topic that matches an active prediction market (like Bitcoin price targets or political events), a beautiful "Priced by SeerumAI" market card will magically appear below the tweet.
-3. Click **Trade** to expand the Blink and place your bets instantly!
-
----
-
-### Backend Requirements (For Developers)
-*Note: The extension relies on a backend Python vectorizer and a Next.js Actions API to serve the Blinks. If you are a developer setting up the environment from scratch, please refer to the deployment documentation to spin up the local AI matching servers.*
+<p align="center">
+  Powered by <a href="https://x.com/seerumAI">SeerumAI</a>
+</p>
