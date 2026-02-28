@@ -28,7 +28,7 @@ app = FastAPI(title="Jupiter Tweet Matcher")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Lock down after hackathon
-    allow_methods=["POST", "GET"],
+    allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -185,6 +185,23 @@ async def get_live_prices(req: PricesRequest):
             prices[r[0]] = r[1]
 
     return {"prices": prices}
+
+
+@app.post("/reload")
+async def reload_data():
+    """Hot-reload market data + embeddings without restarting the server."""
+    global matcher
+    try:
+        new_matcher = Matcher(reranker=reranker)
+        old_count = matcher.num_events
+        matcher = new_matcher
+        return {
+            "status": "ok",
+            "previousEvents": old_count,
+            "newEvents": matcher.num_events,
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 
 @app.get("/health")
