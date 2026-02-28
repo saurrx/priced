@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from embedder import Embedder
 from matcher import Matcher
+from reranker import Reranker
 
 app = FastAPI(title="Jupiter Tweet Matcher")
 
@@ -22,7 +23,15 @@ app.add_middleware(
 )
 
 embedder = Embedder()
-matcher = Matcher()
+
+try:
+    reranker = Reranker()
+    print("[MAIN] Cross-encoder reranker loaded")
+except Exception as e:
+    print(f"[MAIN] Reranker unavailable, falling back to cosine-sim only: {e}")
+    reranker = None
+
+matcher = Matcher(reranker=reranker)
 
 
 class Tweet(BaseModel):
@@ -75,7 +84,7 @@ async def match_tweets(req: MatchRequest):
     matches = []
     for i, (tweet_id, embedding) in enumerate(zip(tweet_ids, tweet_embeddings)):
         candidates = req.candidates.get(tweet_id) if req.candidates else None
-        result = matcher.match(embedding, candidates)
+        result = matcher.match(embedding, candidates, tweet_text=texts[i])
         if result:
             matches.append(
                 TweetMatch(
@@ -104,5 +113,6 @@ async def health():
         "status": "ok",
         "source": "jupiter",
         "model": "bge-base-en-v1.5",
+        "reranker": "gte-reranker-modernbert-base" if reranker else None,
         "events": matcher.num_events,
     }

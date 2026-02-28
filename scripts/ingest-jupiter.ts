@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 
 const JUP_API = "https://api.jup.ag/prediction/v1";
 const JUP_API_KEY = process.env.JUP_API_KEY || "5f6da690-eb02-4aed-858b-3c034f0b490d";
-const VOLUME_THRESHOLD = 10_000; // $10K volume (Jupiter volume is in micro-USD / 1e6)
+const VOLUME_THRESHOLD = 5_000; // $5K volume (Jupiter volume is in micro-USD / 1e6)
 const PAGE_SIZE = 20; // Jupiter max per page
 const CONCURRENCY = 5; // Parallel page fetches
 const MAX_ZERO_PAGES = 3; // Stop after N consecutive pages with no qualifying markets

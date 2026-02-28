@@ -4,6 +4,7 @@ dist/
 .context/
 server/.venv/
 server/data/model.onnx
+server/data/reranker-model.onnx
 server/data/event-embeddings.npy
 __pycache__/
 *.pyc
