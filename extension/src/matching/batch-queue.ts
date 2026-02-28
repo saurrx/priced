@@ -88,7 +88,7 @@ export class BatchQueue {
       );
       const tweet = batch.find((t) => t.id === match.id);
       if (tweet && match.markets.length > 0) {
-        renderMarketBar(tweet.element, match);
+        renderMarketBar(tweet.element, match, this.apiClient);
       }
     }
 
