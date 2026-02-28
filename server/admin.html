@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seerum Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0a;color:#e0e0e0;min-height:100vh}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.login-box{background:#141414;border:1px solid #222;border-radius:12px;padding:40px;width:340px;text-align:center}
+.login-box h1{color:#FFD700;font-size:1.4rem;margin-bottom:24px}
+.login-box input{width:100%;padding:10px 14px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#e0e0e0;font-size:14px;outline:none}
+.login-box input:focus{border-color:#FFD700}
+.login-box button{width:100%;margin-top:14px;padding:10px;background:#FFD700;color:#0a0a0a;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}
+.login-box button:hover{background:#e6c200}
+.login-box .err{color:#ff4d4d;font-size:13px;margin-top:10px;min-height:18px}
+
+#app{display:none;max-width:860px;margin:0 auto;padding:24px 16px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+header h1{color:#FFD700;font-size:1.3rem}
+header button{background:none;border:1px solid #333;color:#aaa;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px}
+header button:hover{border-color:#FFD700;color:#FFD700}
+
+.stats{display:flex;gap:12px;margin-bottom:24px}
+.stat{flex:1;background:#141414;border:1px solid #222;border-radius:10px;padding:16px;text-align:center}
+.stat .val{font-size:1.6rem;font-weight:700;color:#FFD700}
+.stat .lbl{font-size:12px;color:#888;margin-top:4px}
+
+.create-form{background:#141414;border:1px solid #222;border-radius:10px;padding:18px;margin-bottom:24px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.create-form .field{display:flex;flex-direction:column;gap:4px}
+.create-form .field label{font-size:12px;color:#888}
+.create-form .field input{padding:8px 12px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#e0e0e0;font-size:13px;outline:none}
+.create-form .field input:focus{border-color:#FFD700}
+.create-form button{padding:8px 20px;background:#FFD700;color:#0a0a0a;border:none;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;height:35px}
+.create-form button:hover{background:#e6c200}
+
+table{width:100%;border-collapse:collapse;background:#141414;border:1px solid #222;border-radius:10px;overflow:hidden}
+th{text-align:left;padding:12px 14px;background:#1a1a1a;color:#888;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+td{padding:10px 14px;border-top:1px solid #1a1a1a;font-size:13px}
+tr:hover td{background:#181818}
+.code-cell{font-family:'SF Mono',Monaco,monospace;color:#FFD700}
+.usage{color:#ccc}
+.usage .lim{color:#666}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge.on{background:#1a3a1a;color:#4ade80}
+.badge.off{background:#3a1a1a;color:#ff6b6b}
+.actions{display:flex;gap:6px}
+.actions button{background:none;border:1px solid #333;color:#aaa;padding:4px 10px;border-radius:4px;font-size:12px;cursor:pointer}
+.actions button:hover{border-color:#FFD700;color:#FFD700}
+.actions button.del:hover{border-color:#ff4d4d;color:#ff4d4d}
+.empty{text-align:center;padding:40px;color:#555}
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="login">
+  <div class="login-box">
+    <h1>Seerum Admin</h1>
+    <input type="password" id="pw" placeholder="Admin password" autofocus>
+    <button onclick="login()">Login</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <h1>Access Codes</h1>
+    <button onclick="logout()">Logout</button>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="create-form">
+    <div class="field" style="flex:1">
+      <label>Code</label>
+      <input type="text" id="newCode" placeholder="e.g. LAUNCH50">
+    </div>
+    <div class="field">
+      <label>Max uses (0 = unlimited)</label>
+      <input type="number" id="newMax" value="0" min="0" style="width:120px">
+    </div>
+    <button onclick="createCode()">Create</button>
+  </div>
+
+  <table>
+    <thead><tr><th>Code</th><th>Usage</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<script>
+let token = sessionStorage.getItem('admin_token') || '';
+const API = '/admin/api';
+
+if (token) showApp();
+
+document.getElementById('pw').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+async function login() {
+  const pw = document.getElementById('pw').value;
+  const res = await fetch('/admin/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({password: pw}) });
+  const data = await res.json();
+  if (data.token) { token = data.token; sessionStorage.setItem('admin_token', token); showApp(); }
+  else document.getElementById('loginErr').textContent = 'Invalid password';
+}
+
+function logout() { fetch('/admin/logout', { method: 'POST', headers: hdr() }); token = ''; sessionStorage.removeItem('admin_token'); location.reload(); }
+
+function showApp() {
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  refresh();
+}
+
+function hdr() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }; }
+
+async function apiFetch(path, opts = {}) {
+  opts.headers = hdr();
+  const res = await fetch(API + path, opts);
+  if (res.status === 401) { logout(); return null; }
+  return res.json();
+}
+
+async function refresh() {
+  const codes = await apiFetch('/codes');
+  if (!codes) return;
+
+  const total = codes.length;
+  const active = codes.filter(c => c.active).length;
+  const totalUses = codes.reduce((s, c) => s + c.used_count, 0);
+  document.getElementById('stats').innerHTML =
+    `<div class="stat"><div class="val">${total}</div><div class="lbl">Total Codes</div></div>` +
+    `<div class="stat"><div class="val">${active}</div><div class="lbl">Active</div></div>` +
+    `<div class="stat"><div class="val">${totalUses}</div><div class="lbl">Total Uses</div></div>`;
+
+  const tbody = document.getElementById('tbody');
+  if (!codes.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No access codes yet</td></tr>'; return; }
+  tbody.innerHTML = codes.map(c => {
+    const maxLabel = c.max_uses > 0 ? c.max_uses : '&infin;';
+    const date = new Date(c.created_at * 1000).toLocaleDateString();
+    const badge = c.active ? '<span class="badge on">Active</span>' : '<span class="badge off">Inactive</span>';
+    return `<tr>
+      <td class="code-cell">${esc(c.code)}</td>
+      <td class="usage">${c.used_count} <span class="lim">/ ${maxLabel}</span></td>
+      <td>${badge}</td>
+      <td>${date}</td>
+      <td class="actions">
+        <button onclick="toggleCode('${esc(c.code)}', ${!c.active})">${c.active ? 'Disable' : 'Enable'}</button>
+        <button onclick="resetCode('${esc(c.code)}')">Reset</button>
+        <button class="del" onclick="deleteCode('${esc(c.code)}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+async function createCode() {
+  const code = document.getElementById('newCode').value.trim();
+  if (!code) return;
+  const max = parseInt(document.getElementById('newMax').value) || 0;
+  await apiFetch('/codes', { method: 'POST', body: JSON.stringify({ code, max_uses: max }) });
+  document.getElementById('newCode').value = '';
+  refresh();
+}
+
+async function toggleCode(code, active) {
+  await apiFetch('/codes/' + encodeURIComponent(code), { method: 'PATCH', body: JSON.stringify({ active }) });
+  refresh();
+}
+
+async function resetCode(code) {
+  await apiFetch('/codes/' + encodeURIComponent(code) + '/reset', { method: 'POST' });
+  refresh();
+}
+
+async function deleteCode(code) {
+  if (!confirm('Delete code "' + code + '"?')) return;
+  await apiFetch('/codes/' + encodeURIComponent(code), { method: 'DELETE' });
+  refresh();
+}
+</script>
+</body>
+</html>
