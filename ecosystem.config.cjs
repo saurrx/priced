@@ -24,7 +24,7 @@ module.exports = {
             cwd: ".",
             instances: 1,
             autorestart: false,
-            cron_restart: "*/30 * * * *",
+            cron_restart: "0 6 * * *", // daily at 6 AM UTC
             watch: false
         }
     ]

@@ -2,13 +2,16 @@
 
 import json
 import os
+import time
 import numpy as np
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
 class Matcher:
-    def __init__(self):
+    def __init__(self, reranker=None):
+        self.reranker = reranker
+
         self.event_embeddings = np.load(os.path.join(DATA_DIR, "event-embeddings.npy"))
 
         with open(os.path.join(DATA_DIR, "event-tickers.json")) as f:
@@ -16,6 +19,11 @@ class Matcher:
 
         with open(os.path.join(DATA_DIR, "markets-snapshot.json")) as f:
             self.snapshot = json.load(f)
+
+        # Load raw event texts for cross-encoder reranking
+        if self.reranker:
+            with open(os.path.join(DATA_DIR, "embedding-texts.json")) as f:
+                self.embedding_texts: list[str] = json.load(f)
 
         # Build event -> markets lookup
         self.event_markets: dict[str, list[dict]] = {}
@@ -42,6 +50,10 @@ class Matcher:
         embedding: np.ndarray,
         candidates: list[str] | None = None,
         threshold: float = 0.75,
+        max_fallbacks: int = 5,
+        tweet_text: str | None = None,
+        rerank_top_n: int = 20,
+        rerank_threshold: float = 0.5,
     ) -> dict | None:
         if candidates:
             indices = [self.id_to_idx[eid] for eid in candidates if eid in self.id_to_idx]
@@ -49,27 +61,50 @@ class Matcher:
                 return None
             candidate_embeddings = self.event_embeddings[indices]
             scores = embedding @ candidate_embeddings.T
-            best_idx = int(np.argmax(scores))
-            best_score = float(scores[best_idx])
-            best_event_id = candidates[best_idx]
+            ranked = np.argsort(scores)[::-1]
+            ranked_ids = [candidates[i] for i in ranked]
+            ranked_indices = [indices[i] for i in ranked]
         else:
             scores = embedding @ self.event_embeddings.T
-            best_idx = int(np.argmax(scores))
-            best_score = float(scores[best_idx])
-            best_event_id = self.event_ids[best_idx]
+            ranked = np.argsort(scores)[::-1]
+            ranked_ids = [self.event_ids[i] for i in ranked]
+            ranked_indices = [int(i) for i in ranked]
 
-        if best_score < threshold:
-            return None
+        # Cross-encoder reranking: score top-N candidates with the reranker
+        if self.reranker and tweet_text:
+            top_n = min(rerank_top_n, len(ranked_ids))
+            top_ids = ranked_ids[:top_n]
+            top_indices = ranked_indices[:top_n]
 
-        markets = self._select_markets(best_event_id)
-        if not markets:
-            return None
+            documents = [self.embedding_texts[i] for i in top_indices]
+            rerank_scores = self.reranker.score_pairs(tweet_text, documents)
 
-        return {
-            "eventId": best_event_id,
-            "confidence": round(best_score, 3),
-            "markets": markets,
-        }
+            reranked_order = np.argsort(rerank_scores)[::-1]
+            ranked_ids = [top_ids[i] for i in reranked_order]
+            ranked_scores = [float(rerank_scores[i]) for i in reranked_order]
+            threshold = rerank_threshold
+        else:
+            if candidates:
+                ranked_scores = [float(scores[i]) for i in np.argsort(scores)[::-1]]
+            else:
+                ranked_scores = [float(scores[i]) for i in ranked]
+
+        # Try top events in order — skip events whose markets are all closed
+        for event_id, score in zip(
+            ranked_ids[:max_fallbacks], ranked_scores[:max_fallbacks]
+        ):
+            if score < threshold:
+                return None
+
+            markets = self._select_markets(event_id)
+            if markets:
+                return {
+                    "eventId": event_id,
+                    "confidence": round(score, 3),
+                    "markets": markets,
+                }
+
+        return None
 
     def get_market_by_id(self, market_id: str) -> dict | None:
         market = self.market_by_id.get(market_id)
@@ -92,23 +127,31 @@ class Matcher:
             "rulesPrimary": market.get("rulesPrimary", ""),
         }
 
-    def _select_markets(self, event_id: str, max_markets: int = 2) -> list[dict]:
+    def _select_markets(self, event_id: str, max_markets: int = 6) -> list[dict]:
         markets = self.event_markets.get(event_id, [])
         if not markets:
             return []
 
-        # Filter: skip near-resolved markets (price < 3c or > 97c)
+        now_unix = int(time.time())
+
+        # Filter: skip closed markets and near-resolved markets (price < 3c or > 97c)
         # Jupiter prices are in micro-USD: 30000 = $0.03, 970000 = $0.97
         viable = [
             m
             for m in markets
             if m.get("buyYesPriceUsd") is not None
             and 30000 <= m["buyYesPriceUsd"] <= 970000
+            and (m.get("closeTime") is None or m["closeTime"] > now_unix)
         ]
 
-        # Fallback: any market with pricing
+        # Fallback: any open market with pricing
         if not viable:
-            viable = [m for m in markets if m.get("buyYesPriceUsd") is not None]
+            viable = [
+                m
+                for m in markets
+                if m.get("buyYesPriceUsd") is not None
+                and (m.get("closeTime") is None or m["closeTime"] > now_unix)
+            ]
 
         # Sort by uncertainty (closest to 50c = $0.50 = 500000 micro-USD)
         viable.sort(
