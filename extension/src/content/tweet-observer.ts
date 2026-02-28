@@ -36,10 +36,14 @@ function processTweet(article: HTMLElement, batchQueue: BatchQueue) {
   const textEl = article.querySelector('[data-testid="tweetText"]');
   if (!textEl) return;
 
-  const text = textEl.textContent || "";
+  const rawText = textEl.textContent || "";
+  if (rawText.length < MIN_TWEET_LENGTH) return;
+
+  // Strip URLs — they add noise to semantic matching
+  const text = rawText.replace(/https?:\/\/\S+/g, "").replace(/\S+\.\S+\/\S+/g, "").trim();
   if (text.length < MIN_TWEET_LENGTH) return;
 
-  const id = hashText(text);
+  const id = hashText(rawText);
   if (processedTweets.has(id)) return;
   processedTweets.add(id);
 

@@ -19,6 +19,7 @@ export interface TweetMatch {
   eventId: string;
   confidence: number;
   markets: MarketMatch[];
+  totalMarkets?: number;
 }
 
 export interface MatchResponse {
