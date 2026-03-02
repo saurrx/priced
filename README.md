@@ -18,7 +18,7 @@
 
 ## Overview
 
-Priced is a Chrome extension that brings real-time prediction markets directly into your X (Twitter) feed. Powered by **Jupiter Prediction Markets on Solana**, the extension uses intelligent semantic matching to detect tweets about real-world events and embeds interactive trading cards right below the tweet. Trade YES or NO shares without ever leaving your feed.
+Priced is a Chrome extension that brings real-time prediction markets directly into your X (Twitter) feed. It matches tweets to live **Polymarket** predictions and lets you trade on-chain through **Jupiter on Solana**. The extension uses intelligent semantic matching to detect tweets about real-world events and embeds interactive trading cards right below the tweet. Trade YES or NO shares without ever leaving your feed.
 
 ## Features
 
@@ -33,7 +33,7 @@ Priced is a Chrome extension that brings real-time prediction markets directly i
 - Expand to view full market details and live price updates
 
 ### Trade via Solana Blinks
-- One-click trading through Jupiter Prediction Markets
+- One-click trading — Polymarket odds, powered by Jupiter on Solana
 - Buy YES or NO shares with custom USD amounts
 - Transactions execute through Solana Blinks — no redirect needed
 
@@ -55,6 +55,13 @@ Priced is a Chrome extension that brings real-time prediction markets directly i
 2. Enter your invite code: **`GRAVEYARD`**
 3. Head to [x.com](https://x.com) and scroll your feed — market cards appear automatically!
 
+### Step 4: Trade
+1. Keep scrolling X as usual — Priced matches tweets to active Polymarket predictions in the background
+2. When a tweet matches a live market, a trading card with real-time odds appears below it
+3. Click **YES** or **NO** — a Solana Blink opens inline
+4. Choose your amount, click **Buy**, and confirm with your wallet
+5. Track your positions, close trades, or claim winnings at [priced.seerum.ai](https://priced.seerum.ai) or [jup.ag/prediction/profile](https://jup.ag/prediction/profile)
+
 ## Getting an Invite Code
 
 Priced is currently invite-only. To request access:
@@ -63,7 +70,7 @@ Priced is currently invite-only. To request access:
 
 ## How It Works
 
-When you scroll through X, Priced scans tweet text using a semantic AI model and matches it against 1,300+ active prediction market events on Jupiter. When a tweet matches, a compact market card slides in below the tweet showing current probabilities. Click to expand and trade directly via Solana Blinks.
+When you scroll through X, Priced scans tweet text using a semantic AI model and matches it against 1,300+ active prediction markets on Polymarket. When a tweet matches, a compact market card slides in below the tweet showing current probabilities. Click to expand and trade directly via Solana Blinks.
 
 ## Permissions Explained
 
