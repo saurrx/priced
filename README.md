@@ -1,13 +1,7 @@
 # Priced by SeerumAI
 
 <p align="center">
-  <video src="https://videowithsubtitles.s3.us-east-2.amazonaws.com/rjzrjoybpndmceo.mp4" controls width="720">
-    Your browser does not support the video tag.
-  </video>
-</p>
-
-<p align="center">
-  <a href="https://videowithsubtitles.s3.us-east-2.amazonaws.com/rjzrjoybpndmceo.mp4">Watch the demo video</a>
+  <img src="docs/assets/readme-demo.gif" alt="Priced demo video preview">
 </p>
 
 <p align="center">
