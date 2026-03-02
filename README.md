@@ -1,7 +1,13 @@
 # Priced by SeerumAI
 
 <p align="center">
-  <img src="extension/icons/icon128.png" alt="Priced Logo" width="128" height="128">
+  <video src="https://videowithsubtitles.s3.us-east-2.amazonaws.com/rjzrjoybpndmceo.mp4" controls width="720">
+    Your browser does not support the video tag.
+  </video>
+</p>
+
+<p align="center">
+  <a href="https://videowithsubtitles.s3.us-east-2.amazonaws.com/rjzrjoybpndmceo.mp4">Watch the demo video</a>
 </p>
 
 <p align="center">
@@ -52,7 +58,7 @@ Priced is a Chrome extension that brings real-time prediction markets directly i
 
 ### Step 3: Activate
 1. Click the **Priced** extension icon in your browser toolbar
-2. Enter your invite code
+2. Enter your invite code: **`GRAVEYARD`**
 3. Head to [x.com](https://x.com) and scroll your feed — market cards appear automatically!
 
 ## Getting an Invite Code
