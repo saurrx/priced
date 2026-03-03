@@ -16,6 +16,18 @@
   <a href="#privacy--security">Privacy & Security</a>
 </p>
 
+---
+
+> ### 🎉🚀 Priced is Now Live on the Chrome Web Store! — _March 3, 2025_
+>
+> We're thrilled to announce that **Priced** is officially available on the **Chrome Web Store**! No more manual installs — get it in one click and start trading prediction markets right from your X feed.
+>
+> 👉 **[Download Priced from the Chrome Web Store](https://chromewebstore.google.com/detail/priced-by-seerum/gdlbhdololkgfmgbicopfkhcmilpcfkp)**
+>
+> 🔑 Use invite code **`GRAVEYARD`** to get started!
+
+---
+
 ## Overview
 
 Priced is a Chrome extension that brings real-time prediction markets directly into your X (Twitter) feed. It matches tweets to live **Polymarket** predictions and lets you trade on-chain through **Jupiter on Solana**. The extension uses intelligent semantic matching to detect tweets about real-world events and embeds interactive trading cards right below the tweet. Trade YES or NO shares without ever leaving your feed.
